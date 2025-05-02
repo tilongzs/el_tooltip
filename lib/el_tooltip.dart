@@ -1,5 +1,6 @@
 library el_tooltip;
 
+import 'dart:async';
 import 'package:el_tooltip/src/el_tooltip_controller.dart';
 import 'package:el_tooltip/src/el_tooltip_overlay.dart';
 import 'package:flutter/material.dart';
@@ -107,6 +108,8 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
 
   bool initial = true;
 
+  Timer? _timerHidden;
+
   /// Automatically hide the overlay when the screen dimension changes
   /// or when the user scrolls. This is done to avoid displacement.
   @override
@@ -121,6 +124,7 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _overlayEntry?.remove();
+    _timerHidden?.cancel();
     super.dispose();
   }
 
@@ -254,7 +258,9 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
 
     // Add timeout for the tooltip to disappear after a few seconds
     if (widget.timeout > Duration.zero) {
-      await Future.delayed(widget.timeout).whenComplete((){
+      _timerHidden?.cancel();
+      _timerHidden = Timer(widget.timeout, (){
+        _timerHidden = null;
         widget.controller?.hide() ?? _hideOverlay();
       });
     }
@@ -271,6 +277,8 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
       _overlayEntry?.remove();
       _overlayEntry = null;
     }
+
+    _timerHidden?.cancel();
   }
 
   @override
