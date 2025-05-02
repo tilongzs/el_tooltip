@@ -254,7 +254,9 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
 
     // Add timeout for the tooltip to disappear after a few seconds
     if (widget.timeout > Duration.zero) {
-      await Future.delayed(widget.timeout).whenComplete(_hideOverlay);
+      await Future.delayed(widget.timeout).whenComplete((){
+        widget.controller?.hide() ?? _hideOverlay();
+      });
     }
   }
 
@@ -266,7 +268,6 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
       _overlayKey = null;
     }
     if (_overlayEntry != null) {
-      widget.controller?.notify(ElTooltipStatus.hidden);
       _overlayEntry?.remove();
       _overlayEntry = null;
     }
