@@ -212,7 +212,7 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
 
   /// Loads the tooltip into view
   Future<void> _showOverlay([BuildContext? context]) async {
-    if (_overlayEntry != null) return; // 防止重复插入
+    if (_overlayEntry != null) return; // 闃叉閲嶅鎻掑叆
     // fix for disappearing tooltip
     setState(() => initial = true);
 
@@ -272,7 +272,7 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
     final state = _overlayKey?.currentState;
     if (state != null) {
       await state.hide();
-      widget.controller?.notify(ElTooltipStatus.hidden); // 强制通知
+      widget.controller?.notify(ElTooltipStatus.hidden); // 寮哄埗閫氱煡
       _overlayKey = null;
     }
     if (_overlayEntry != null) {
