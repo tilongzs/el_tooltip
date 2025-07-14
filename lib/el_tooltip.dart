@@ -38,6 +38,7 @@ class ElTooltip extends StatefulWidget {
     this.appearAnimationDuration = Duration.zero,
     this.disappearAnimationDuration = Duration.zero,
     this.controller,
+    this.initial,
     super.key,
   });
 
@@ -91,6 +92,9 @@ class ElTooltip extends StatefulWidget {
   /// [controller] Controller that allows to show or hide the tooltip
   final ElTooltipController? controller;
 
+  /// [initial] Is the initialization of the first frame complete
+  final ValueNotifier<bool>? initial;
+
   @override
   State<ElTooltip> createState() => _ElTooltipState();
 }
@@ -106,7 +110,7 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
 
   final GlobalKey _widgetKey = GlobalKey();
 
-  bool initial = true;
+  ValueNotifier<bool>? _initial;
 
   Timer? _timerHidden;
 
@@ -115,8 +119,8 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     // do not hide the overlay if it's the first time it's shown
-    if (!initial) _hideOverlay();
-    setState(() => initial = false);
+    if (!_initial!.value) _hideOverlay();
+    setState(() => _initial?.value = false);
   }
 
   /// Dispose the observer
@@ -132,10 +136,13 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _loadHiddenOverlay(context));
     WidgetsBinding.instance.addObserver(this);
     widget.controller?.attach(show: _showOverlay, hide: _hideOverlay);
+    _initial = widget.initial ?? ValueNotifier<bool>(false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadHiddenOverlay(context);
+      _initial?.value = true;
+    });
   }
 
   ElementBox get _screenSize => _getScreenSize();
@@ -214,7 +221,7 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
   Future<void> _showOverlay([BuildContext? context]) async {
     if (_overlayEntry != null) return; // 防止重复插入
     // fix for disappearing tooltip
-    setState(() => initial = true);
+    setState(() => _initial?.value = true);
 
     context ??= this.context;
     final overlayState = Overlay.of(context);
@@ -272,7 +279,7 @@ class _ElTooltipState extends State<ElTooltip> with WidgetsBindingObserver {
     final state = _overlayKey?.currentState;
     if (state != null) {
       await state.hide();
-      widget.controller?.notify(ElTooltipStatus.hidden); // 强制通知
+      widget.controller?.notify(ElTooltipStatus.hidden); // obligatory notification
       _overlayKey = null;
     }
     if (_overlayEntry != null) {
